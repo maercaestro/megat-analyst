@@ -4,6 +4,10 @@ import streamlit as st
 import pandas as pd
 from datetime import timedelta
 from crew_setup import setup_crew
+import sys
+import pysqlite3 as sqlite3
+sys.modules['sqlite3'] = sqlite3
+
 
 # Set up Streamlit page configuration
 st.set_page_config(layout="wide")
