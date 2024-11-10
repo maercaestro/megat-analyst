@@ -65,7 +65,7 @@ This project provides automated analysis and insights on crude oil prices:
 4. **Run the Streamlit App**:
 
    ```bash
-   streamlit run app.py
+   streamlit run main.py
    ```
 
 5. **Run the Email Automation Script**:
@@ -118,18 +118,27 @@ You can set up a cron job to automate this daily. Here’s an example for runnin
 
 ---
 
+
 ## File Structure
 
 ```plaintext
 crude-oil-analysis/
-├── app.py                     # Main application with Streamlit and email automation
+├── main.py                    # Streamlit application for interactive analysis
+├── app.py                     # Script for email automation
 ├── requirements.txt           # Python dependencies
 ├── .env                       # Environment variables for API keys and credentials
 ├── README.md                  # Project documentation
 └── config.toml                # (Optional) Configurations in TOML format
 ```
 
----
+- **`main.py`**: The Streamlit application file, providing an interactive dashboard for real-time crude oil price analysis, trend visualization, and news insights.
+- **`app.py`**: The email automation script that fetches data, generates analysis, and sends daily email reports with embedded visualizations and a link to the Streamlit app.
+- **`requirements.txt`**: Lists all Python dependencies required for the project.
+- **`.env`**: Stores sensitive environment variables (e.g., API keys, email credentials).
+- **`README.md`**: Contains the project documentation.
+- **`config.toml`** (optional): TOML configuration file, if needed for structured settings.
+
+___
 
 ## Dependencies
 
