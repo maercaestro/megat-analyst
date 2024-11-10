@@ -1,0 +1,36 @@
+crude_oil_analysis:
+  description: >
+    Conduct a comprehensive analysis of current crude oil prices, including recent trends and forecasts using ARIMA.
+    Examine key influencing factors such as production levels, geopolitical events, and economic indicators.
+    Contextualize the analysis with relevant news and macroeconomic insights to help users understand the broader implications.
+
+  expected_output: >
+    A detailed report on the current state of crude oil prices, including trends, short-term forecasts, and a discussion of significant factors affecting the market.
+    This should be presented clearly, making use of recent data, and should highlight any potential future impacts.
+
+news_summary:
+  description: >
+    Collect and summarize recent news articles, press releases, and analyses related to the crude oil market.
+    Pay close attention to impactful events such as geopolitical developments, OPEC decisions, and significant economic indicators.
+    Summarize key insights and assess how these events may influence crude oil prices in the short term.
+
+  expected_output: >
+    A report with a summary of the latest news, highlighting critical events and market sentiments.
+    Include an assessment of how these factors might influence the crude oil market, using the most recent data available.
+
+forecast_review:
+  description: >
+    Evaluate the latest ARIMA model forecasts on crude oil prices and assess the reliability of the projections.
+    Compare recent predictions to past price trends and examine if any unexpected events might alter the accuracy of the forecast.
+
+  expected_output: >
+    A report that reviews the ARIMA forecast, discussing its alignment with current market conditions and historical trends.
+    Note any factors that could impact the forecast accuracy and provide a confidence level for the predictions.
+
+recommendation:
+  description: >
+    Based on the crude oil analysis and news summary, provide a recommendation on market outlook and potential actions.
+    Synthesize insights from both the analysis and news summaries to offer a balanced perspective on crude oil price movement.
+
+  expected_output: > 
+    A clear, comprehensive recommendation summarizing market outlook and suggested actions. This should integrate data from the analysis and news summary, presenting an informed, well-rounded perspective.
