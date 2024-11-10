@@ -1,2 +1,1 @@
-# agentic-trader
 # megat-analyst
