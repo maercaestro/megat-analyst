@@ -1,9 +1,12 @@
 # main.py
-
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import streamlit as st
 import pandas as pd
 from datetime import timedelta
 from crew_setup import setup_crew
+
 
 # Set up Streamlit page configuration
 st.set_page_config(layout="wide")
