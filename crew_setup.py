@@ -135,7 +135,7 @@ def setup_crew():
 
     if data is None or forecast is None or news_summary is None:
         logger.error("Failed to retrieve all necessary data for crew setup.")
-        return None, None, None, None  # Return None if data fetching fails
+        return None, None, None, None, None  # Return None if data fetching fails
 
     analysis_agent = AnalysisAgent()
     chat_agent = ChatAgent()
