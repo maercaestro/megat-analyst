@@ -2,7 +2,6 @@ import os
 import logging
 import requests
 import pandas as pd
-import streamlit as st
 from pymongo import MongoClient
 from dotenv import load_dotenv
 from datetime import datetime
@@ -13,12 +12,8 @@ alpha_vantage_api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
 news_api_key = os.getenv("NEWS_API_KEY")
 mongo_uri = os.getenv("MONGO_URI")  # MongoDB URI
 
-# Initialize MongoDB client with caching
-@st.cache_resource
-def init_connection():
-    return MongoClient(mongo_uri,tls=True, tlsAllowInvalidCertificates=True)
-
-client = init_connection()
+# Initialize MongoDB client
+client = MongoClient(mongo_uri, tls=True, tlsAllowInvalidCertificates=True)
 db = client['crude_oil_analysis']
 prices_collection = db['prices']
 news_collection = db['news']
@@ -84,38 +79,7 @@ def fetch_and_store_news_data():
     else:
         logger.warning("Failed to fetch news data")
 
-# Streamlit cached data retrieval for crude oil prices
-@st.cache_data(ttl=600)
-def get_crude_oil_data():
-    items = list(prices_collection.find())
-    return items
-
-# Streamlit cached data retrieval for news articles
-@st.cache_data(ttl=600)
-def get_news_data():
-    items = list(news_collection.find())
-    return items
-
 if __name__ == "__main__":
     # Fetch and store data in MongoDB
     fetch_and_store_crude_oil_data()
     fetch_and_store_news_data()
-
-    # Streamlit UI to display the data
-    st.title("Crude Oil Price Analysis and News")
-
-    # Fetch and display crude oil price data
-    crude_oil_data = get_crude_oil_data()
-    st.subheader("Last 14 Days of Crude Oil Prices:")
-    for item in crude_oil_data:
-        st.write(f"Date: {item['date']}, Close Price: {item['Close']}")
-
-    # Fetch and display news data
-    news_data = get_news_data()
-    st.subheader("Latest News Articles:")
-    for news in news_data:
-        st.write(f"Title: {news['title']}")
-        st.write(f"Source: {news['source']}")
-        st.write(f"Published At: {news['publishedAt']}")
-        st.write(f"Description: {news['description']}")
-        st.write(f"[Read More]({news['url']})")
