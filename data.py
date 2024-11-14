@@ -16,7 +16,7 @@ mongo_uri = os.getenv("MONGO_URI")  # MongoDB URI
 # Initialize MongoDB client with caching
 @st.cache_resource
 def init_connection():
-    return MongoClient(mongo_uri)
+    return MongoClient(mongo_uri,tls=True, tlsAllowInvalidCertificates=True)
 
 client = init_connection()
 db = client['crude_oil_analysis']
