@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from statsmodels.tsa.arima.model import ARIMA
 from datetime import timedelta
-from openai import OpenAI
+import openai
 import matplotlib.pyplot as plt
 from io import BytesIO
 from dotenv import load_dotenv
@@ -21,12 +21,14 @@ smtp_email = os.getenv("SMTP_EMAIL")
 smtp_password = os.getenv("SMTP_PASSWORD")
 mongo_uri = os.getenv("MONGO_URI")
 
+# Set OpenAI API key
+openai.api_key = openai_api_key
+
 # Initialize MongoDB client
 client_db = MongoClient(mongo_uri)
 db = client_db['crude_oil_analysis']
 prices_collection = db['prices']
 news_collection = db['news']
-client = OpenAI(api_key=openai_api_key)
 
 # 1. Crude Oil Price Grabber Agent (MongoDB)
 def crude_oil_price_grabber():
@@ -90,16 +92,17 @@ def market_analyst(df, forecast, news_summary, crude_oil_analysis):
         f"Relevant News:\n{news_summary}"
     )
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant providing crude oil market analysis. Your analysis should be concise and within 4-5 paragraphs"},
+            {"role": "system", "content": "You are a helpful assistant providing crude oil market analysis. Your analysis should be concise and within 4-5 paragraphs."},
             {"role": "user", "content": prompt}
         ],
-        max_tokens=300
+        max_tokens=300,
+        temperature=0.7
     )
 
-    return response.choices[0].message.content
+    return response['choices'][0]['message']['content']
 
 # Create trend plot and return as BytesIO image
 def create_trend_plot(df, forecast):
