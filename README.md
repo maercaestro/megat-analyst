@@ -2,6 +2,8 @@
 
 A project that automates daily crude oil price analysis and insights, using a Streamlit app and an email notification system. The app fetches crude oil prices, forecasts trends, and provides analysis with insights from related news. Daily email reports are sent with embedded visualizations and a link to the Streamlit app for further exploration.
 
+![Uploading logomegat.png…](https://github.com/maercaestro/megat-transformer/blob/6a6f0b6cd569010680e9252ae632f20d6421844f/logomegat.png)
+
 ---
 
 ## Table of Contents
