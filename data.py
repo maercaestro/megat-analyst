@@ -4,82 +4,161 @@ import requests
 import pandas as pd
 from pymongo import MongoClient
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 # Load environment variables
 load_dotenv()
-alpha_vantage_api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
-news_api_key = os.getenv("NEWS_API_KEY")
 mongo_uri = os.getenv("MONGO_URI")  # MongoDB URI
-
-# Initialize MongoDB client
-client = MongoClient(mongo_uri, tls=True, tlsAllowInvalidCertificates=True)
-db = client['crude_oil_analysis']
-prices_collection = db['prices']
-news_collection = db['news']
+enverus_api_key = os.getenv("ENVERUS_API_KEY")
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)  # Reduced verbosity to INFO level
 logger = logging.getLogger(__name__)
 
-# Fetch and store the last 14 days of crude oil price data in MongoDB
-def fetch_and_store_crude_oil_data():
-    # Delete old data from the prices collection
-    prices_collection.delete_many({})  # Clears all previous price data
+# MongoDB setup
+client = MongoClient(mongo_uri)
+db = client['crude_oil_analysis']  # Database name
 
-    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=CL&apikey={alpha_vantage_api_key}&outputsize=compact"
-    response = requests.get(url)
-    data = response.json()
-    
-    if "Time Series (Daily)" in data:
-        # Create a DataFrame and sort it by date
-        df = pd.DataFrame.from_dict(data["Time Series (Daily)"], orient="index", dtype=float)
-        df.index = pd.to_datetime(df.index)
-        df = df.sort_index()
-        df = df.rename(columns={"4. close": "Close"})
-        
-        # Get the last 14 days of data
-        last_14_days_data = df.tail(14)
+# Fetch data from Enverus API
+def fetch_enverus_data(symbols, startdate, enddate):
+    url = (
+        f'https://webservice.gvsi.com/api/v3/getdaily?symbols={symbols}'
+        f'&fields=close%2Ctradedatetimeutc&output=json&includeheaders=true'
+        f'&startdate={startdate}&enddate={enddate}'
+    )
+    headers = {
+        'Authorization': f'{enverus_api_key}'
+    }
 
-        # Insert each of the last 14 days into MongoDB
-        for date, row in last_14_days_data.iterrows():
-            prices_collection.insert_one({
-                "date": date,
-                "Close": row['Close']
+    try:
+        response = requests.request("GET", url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        logger.error(f"API request failed for {symbols}: {e}")
+        return None
+
+def process_and_store_trend_data(trend_name, collection_name, data):
+    if data and "result" in data and "items" in data["result"]:
+        items = data["result"]["items"]
+        df = pd.DataFrame(items)
+
+        # Ensure required columns exist
+        if 'tradedatetimeutc' in df.columns and 'close' in df.columns:
+            # Convert columns to appropriate data types
+            df['tradedatetimeutc'] = pd.to_datetime(df['tradedatetimeutc'], errors='coerce')
+            df['close'] = pd.to_numeric(df['close'], errors='coerce')
+
+            # Sort by date and keep the last 14 entries
+            df = df.sort_values('tradedatetimeutc').tail(14)
+
+            # Get the collection for the trend
+            trend_collection = db[collection_name]
+
+            # Remove old data for this specific trend only
+            trend_collection.delete_many({"trend": trend_name})
+            logger.info(f"Old data cleared for trend '{trend_name}' in collection '{collection_name}'.")
+
+            # Insert new data
+            records = df.to_dict("records")
+            trend_collection.insert_many([{
+                "date": record['tradedatetimeutc'],
+                "Close": record['close'],
+                "trend": trend_name
+            } for record in records])
+            logger.info(f"Data for {trend_name} successfully stored in {collection_name}")
+        else:
+            logger.warning(f"{trend_name}: Missing required keys in data")
+    else:
+        logger.warning(f"{trend_name}: 'result' or 'items' key missing in API response")
+
+
+# Fetch news data from Enverus API
+def fetch_news():
+    url = (
+        'https://webservice.gvsi.com/api/v3/getnews?source=PCR&fields=source%2Cstory%2Cheadline&output=json&includeheaders=true'
+    )
+    headers = {
+        'Authorization': f'{enverus_api_key}'
+    }
+    payload = """"""
+
+    try:
+        # API request
+        response = requests.request("GET", url, headers=headers, data=payload)
+        response.raise_for_status()
+
+        # Parse JSON response
+        response_data = response.json()
+        items = response_data["result"]["items"]
+        if items is not None:
+            return response_data["result"]["items"]
+        else:
+            logger.warning("No news data found in API response")
+            return []
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to fetch news: {e}")
+        return []
+
+# Process and store news data in MongoDB
+def process_and_store_news(news_items):
+    if news_items:
+        news_collection = db['news']
+
+        # Remove old news
+        news_collection.delete_many({})
+        logger.info("Old news data cleared")
+
+        # Insert new news data
+        for news in news_items:
+            news_collection.insert_one({
+                "source": news.get("source"),
+                "headline": news.get("headline"),
+                "story": news.get("story"),
+                "timestamp": datetime.now(timezone.utc)  # Add timestamp for when the news was fetched
             })
-        logger.info("Last 14 days of crude oil price data stored in MongoDB")
+        logger.info("News data successfully stored in MongoDB")
     else:
-        logger.warning("Failed to fetch crude oil data")
+        logger.warning("No news items to store")
 
-# Fetch and store relevant news articles in MongoDB
-def fetch_and_store_news_data():
-    # Delete old data from the news collection
-    news_collection.delete_many({})  # Clears all previous news data
+# Main function to fetch and process data for multiple symbols
+def main():
+    # Define symbols and trends
+    trends = [
+        {"trend_name": "Dated Brent Oil Price", "symbols": "%23D.PCAAS00"},
+        {"trend_name": "Naphtha Crack Spread", "symbols": "%40Naphtha_Crack"},
+        {"trend_name": "Gasoline 95 Crack Spread", "symbols": "%40Gasoline95_Crack"},
+        {"trend_name": "Gasoline 97 Crack Spread", "symbols": "%40Gasoline97_Crack"},
+        {"trend_name": "Gasoil 10PPM Crack Spread", "symbols": "%40Gasoil10PPM_Crack"},
+        {"trend_name": "Gasoil 500PPM Crack Spread", "symbols": "%40Gasoil500PPM_Crack"},
+        {"trend_name": "Gasoil 2500PPM Crack Spread", "symbols": "%40Gasoil2500PPM_Crack"},
+    ]
 
-    keywords = ["crude oil", "OPEC", "geopolitical"]
-    query = " OR ".join(keywords)
-    url = f"https://newsapi.org/v2/everything?q={query}&pageSize=7&sortBy=publishedAt&language=en&apiKey={news_api_key}"
-    response = requests.get(url)
-    news_data = response.json()
+    # Fetch and process data for each trend
+    for trend in trends:
+        trend_name = trend["trend_name"]
+        symbols = trend["symbols"]
+        collection_name = "prices"
+
+        # Calculate date range (last 14 days)
+        end_date = datetime.now().strftime("%m/%d/%Y")
+        start_date = (datetime.now() - timedelta(days=14)).strftime("%m/%d/%Y")
+
+        # Fetch data from the API
+        logger.info(f"Fetching data for {trend_name} ({symbols}) from {start_date} to {end_date}")
+        api_response = fetch_enverus_data(symbols, start_date, end_date)
+
+        # Process the API response and store in MongoDB
+        if api_response:
+            process_and_store_trend_data(trend_name, collection_name, api_response)
+        else:
+            logger.warning(f"Failed to fetch data for {trend_name} ({symbols}).")
     
-    if news_data.get("status") == "ok":
-        articles = news_data["articles"]
-        
-        # Insert the latest news articles into MongoDB
-        for article in articles:
-            news_entry = {
-                "title": article["title"],
-                "description": article["description"],
-                "publishedAt": datetime.strptime(article["publishedAt"], "%Y-%m-%dT%H:%M:%SZ"),
-                "source": article["source"]["name"],
-                "url": article["url"]
-            }
-            news_collection.insert_one(news_entry)
-        logger.info("Latest news data stored in MongoDB")
-    else:
-        logger.warning("Failed to fetch news data")
+    # Fetch and process news
+    logger.info("Fetching news data")
+    news_items = fetch_news()
+    process_and_store_news(news_items)
 
+# Run the main function
 if __name__ == "__main__":
-    # Fetch and store data in MongoDB
-    fetch_and_store_crude_oil_data()
-    fetch_and_store_news_data()
+    main()

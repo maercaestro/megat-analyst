@@ -74,7 +74,7 @@ def forecast_crude_oil(data):
 def fetch_news():
     articles = list(news_collection.find().sort("publishedAt", -1).limit(7))
     if articles:
-        return "\n\n".join([f"{article['title']}: {article['description']}" for article in articles])
+        return "\n\n".join([f"{article['headline']}: {article['story']}" for article in articles])
     else:
         logger.warning("No news data available in MongoDB")
         return "No news data available."
