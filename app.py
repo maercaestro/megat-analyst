@@ -136,7 +136,7 @@ def market_analyst(trends_data, news_summary):
 
     # Use the updated GPT-4 API call
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "You are a helpful assistant providing market analysis."},
             {"role": "user", "content": prompt}

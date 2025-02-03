@@ -132,7 +132,7 @@ class AnalysisAgent(Agent):
         prompt = f"{forecast_summary}\n\nRelevant News:\n{news_summary if news_summary else 'No recent news available.'}"
 
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant providing crude oil market analysis. Provide a concise analysis in 4-5 paragraphs."},
                 {"role": "user", "content": prompt}
@@ -153,7 +153,7 @@ class ChatAgent(Agent):
             "Base your responses on the provided analysis summary. Answer concisely in up to 3 paragraphs."
         )
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "assistant", "content": analysis_summary},
@@ -196,7 +196,7 @@ class AnalysisAgentPetroleum(Agent):
         prompt = f"Analysis for petroleum product crack spreads:\n{summary}\n\nRelevant News:\n{news_summary if news_summary else 'No recent news available.'}"
 
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant providing analysis on petroleum product crack spreads. Provide a concise analysis in 4-5 paragraphs."},
                 {"role": "user", "content": prompt}
@@ -218,7 +218,7 @@ class ChatAgentPetroleum(Agent):
             "Base your answers on the provided analysis summary. Answer concisely in up to 3 paragraphs."
         )
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "assistant", "content": analysis_summary},
