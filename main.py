@@ -134,10 +134,10 @@ class AnalysisAgent(Agent):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant providing crude oil market analysis. Provide a concise analysis in 4-5 paragraphs."},
+                {"role": "system", "content": "You are a helpful assistant providing crude oil market analysis. Provide a concise analysis in 2 paragraphs."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=300,
+            max_tokens=500,
             temperature=0.7
         )
         return response.choices[0].message.content
@@ -150,7 +150,7 @@ class ChatAgent(Agent):
     def run(self, user_input, analysis_summary):
         system_message = (
             "You are a knowledgeable assistant providing insights on crude oil prices. "
-            "Base your responses on the provided analysis summary. Answer concisely in up to 3 paragraphs."
+            "Base your responses on the provided analysis summary. Answer concisely in up to 2 paragraphs."
         )
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -159,7 +159,7 @@ class ChatAgent(Agent):
                 {"role": "assistant", "content": analysis_summary},
                 {"role": "user", "content": user_input}
             ],
-            max_tokens=300,
+            max_tokens=500,
             temperature=0.7
         )
         return response.choices[0].message.content
@@ -215,7 +215,7 @@ class ChatAgentPetroleum(Agent):
     def run(self, user_input, analysis_summary):
         system_message = (
             "You are a knowledgeable assistant providing insights on petroleum product crack spreads. "
-            "Base your answers on the provided analysis summary. Answer concisely in up to 3 paragraphs."
+            "Base your answers on the provided analysis summary. Answer concisely in up to 2 paragraphs."
         )
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -224,7 +224,7 @@ class ChatAgentPetroleum(Agent):
                 {"role": "assistant", "content": analysis_summary},
                 {"role": "user", "content": user_input}
             ],
-            max_tokens=300,
+            max_tokens=500,
             temperature=0.7
         )
         return response.choices[0].message.content
